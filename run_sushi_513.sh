@@ -1,55 +1,84 @@
 #!/usr/bin/env bash
 # fhir__sushi-513，共 109 条命令，按轨迹原顺序执行
+# 控制台只打印每条命令的退出码和耗时；命令输出写到 /tmp/traj-run_sushi_513/step-<序号>.log
+LOG_DIR="${LOG_DIR:-/tmp/traj-run_sushi_513}"
+mkdir -p "$LOG_DIR"
 
-# [1]
+run() {
+  local n=$1 cmd start end rc
+  cmd=$(cat)
+  start=$(date +%s%3N)
+  ( eval "$cmd" ) >"$LOG_DIR/step-$n.log" 2>&1
+  rc=$?
+  end=$(date +%s%3N)
+  printf '[%s] rc=%s %sms\n' "$n" "$rc" "$((end - start))"
+}
+
+run 1 <<'__STEP_CMD__'
 ln -sfn /sushi /testbed && ls /testbed | head -3; go clean -cache 2>/dev/null; rm -rf /testbed/target /testbed/dist /testbed/build /testbed/out /testbed/.gradle /testbed/node_modules/.cache 2>/dev/null; find /testbed -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null; find /testbed -name '*.tsbuildinfo' -delete 2>/dev/null; find /testbed -name '*.o' -delete 2>/dev/null; true; rm -rf /tmp/jest_* /testbed/node_modules/.vite /testbed/.parcel-cache /testbed/.eslintcache 2>/dev/null; true
+__STEP_CMD__
 
-# [2]
+run 2 <<'__STEP_CMD__'
 find /testbed -type f -name "*.js" -o -name "*.ts" | head -20
+__STEP_CMD__
 
-# [3]
+run 3 <<'__STEP_CMD__'
 ls -la /testbed
+__STEP_CMD__
 
-# [4]
+run 4 <<'__STEP_CMD__'
 grep -r "forEach" /testbed/src --include="*.ts" --include="*.js" | grep -i parameter | head -20
+__STEP_CMD__
 
-# [5]
+run 5 <<'__STEP_CMD__'
 find /testbed/src -type f -name "*.ts" | xargs grep -l "Parameters" | head -20
+__STEP_CMD__
 
-# [6]
+run 6 <<'__STEP_CMD__'
 find /testbed/src -type f -name "*.ts" | xargs grep -l "Instance" | head -20
+__STEP_CMD__
 
-# [7]
+run 7 <<'__STEP_CMD__'
 wc -l /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [8]
+run 8 <<'__STEP_CMD__'
 cat /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [9]
+run 9 <<'__STEP_CMD__'
 grep -n "forEach" /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [10]
+run 10 <<'__STEP_CMD__'
 grep -n "forEach" /testbed/src/fhirtypes/common.ts | head -30
+__STEP_CMD__
 
-# [11]
+run 11 <<'__STEP_CMD__'
 sed -n '140,160p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [12]
+run 12 <<'__STEP_CMD__'
 find /testbed/test -type f -name "*.test.ts" | xargs grep -l "Parameters" | head -10
+__STEP_CMD__
 
-# [13]
+run 13 <<'__STEP_CMD__'
 find /testbed/test -type f -name "*.test.ts" | xargs grep -l "Parameter" | head -10
+__STEP_CMD__
 
-# [14]
+run 14 <<'__STEP_CMD__'
 find /testbed/src -name "StructureDefinition.ts" -type f
+__STEP_CMD__
 
-# [15]
+run 15 <<'__STEP_CMD__'
 grep -n "validateValueAtPath" /testbed/src/fhirtypes/StructureDefinition.ts | head -5
+__STEP_CMD__
 
-# [16]
+run 16 <<'__STEP_CMD__'
 sed -n '441,600p' /testbed/src/fhirtypes/StructureDefinition.ts
+__STEP_CMD__
 
-# [17]
+run 17 <<'__STEP_CMD__'
 cat > /testbed/test_parameters.fsh << 'EOF'
 Instance: PatientEx12
 InstanceOf: Patient
@@ -61,50 +90,65 @@ Usage: #inline
 * parameter.name = "patient"
 * parameter.valueReference = Reference(PatientEx12)
 EOF
+__STEP_CMD__
 
-# [18]
+run 18 <<'__STEP_CMD__'
 cat /testbed/package.json | grep -A 5 "scripts"
+__STEP_CMD__
 
-# [19]
+run 19 <<'__STEP_CMD__'
 find /testbed/test -name "*Instance*.test.ts" | head -5
+__STEP_CMD__
 
-# [20]
+run 20 <<'__STEP_CMD__'
 head -100 /testbed/test/export/InstanceExporter.test.ts
+__STEP_CMD__
 
-# [21]
+run 21 <<'__STEP_CMD__'
 grep -n "export function setPropertyOnInstance" /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [22]
+run 22 <<'__STEP_CMD__'
 sed -n '120,250p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [23]
+run 23 <<'__STEP_CMD__'
 grep -n "\.forEach" /testbed/src/fhirtypes/common.ts | grep -v "?\.forEach"
+__STEP_CMD__
 
-# [24]
+run 24 <<'__STEP_CMD__'
 sed -n '385,420p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [25]
+run 25 <<'__STEP_CMD__'
 cat /testbed/src/fshtypes/Instance.ts
+__STEP_CMD__
 
-# [26]
+run 26 <<'__STEP_CMD__'
 grep -n "new Instance" /testbed/src/import/FSHImporter.ts | head -10
+__STEP_CMD__
 
-# [27]
+run 27 <<'__STEP_CMD__'
 sed -n '310,350p' /testbed/src/import/FSHImporter.ts
+__STEP_CMD__
 
-# [28]
+run 28 <<'__STEP_CMD__'
 grep -rn "Bundle" /testbed/src/export --include="*.ts" | grep -i instance | head -20
+__STEP_CMD__
 
-# [29]
+run 29 <<'__STEP_CMD__'
 grep -n "Bundle" /testbed/src/ig/IGExporter.ts | head -20
+__STEP_CMD__
 
-# [30]
+run 30 <<'__STEP_CMD__'
 grep -n "FshReference" /testbed/src/fhirtypes/common.ts | head -20
+__STEP_CMD__
 
-# [31]
+run 31 <<'__STEP_CMD__'
 sed -n '230,280p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [32]
+run 32 <<'__STEP_CMD__'
 cat > /testbed/reproduce_issue.js << 'EOF'
 const { FHIRDefinitions } = require('./dist/fhirdefs');
 const { FSHTank, FSHDocument } = require('./dist/import');
@@ -189,14 +233,17 @@ async function run() {
 
 run().catch(console.error);
 EOF
+__STEP_CMD__
 
-# [33]
+run 33 <<'__STEP_CMD__'
 cd /testbed && npm run build 2>&1 | tail -20
+__STEP_CMD__
 
-# [34]
+run 34 <<'__STEP_CMD__'
 cd /testbed && node reproduce_issue.js
+__STEP_CMD__
 
-# [35]
+run 35 <<'__STEP_CMD__'
 cat > /testbed/reproduce_issue.js << 'EOF'
 const { FHIRDefinitions, loadFromPath } = require('./dist/fhirdefs');
 const { FSHTank, FSHDocument } = require('./dist/import');
@@ -281,116 +328,153 @@ async function run() {
 
 run().catch(console.error);
 EOF
+__STEP_CMD__
 
-# [36]
+run 36 <<'__STEP_CMD__'
 cd /testbed && node reproduce_issue.js 2>&1
+__STEP_CMD__
 
-# [37]
+run 37 <<'__STEP_CMD__'
 grep -rn "valueReference" /testbed/test --include="*.test.ts" | head -10
+__STEP_CMD__
 
-# [38]
+run 38 <<'__STEP_CMD__'
 grep -rn "\.forEach" /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [39]
+run 39 <<'__STEP_CMD__'
 sed -n '130,170p' /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [40]
+run 40 <<'__STEP_CMD__'
 grep -B5 -A5 "fshDefinition.rules" /testbed/src/fhirtypes/common.ts | head -40
+__STEP_CMD__
 
-# [41]
+run 41 <<'__STEP_CMD__'
 sed -n '340,365p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [42]
+run 42 <<'__STEP_CMD__'
 sed -n '365,385p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [43]
+run 43 <<'__STEP_CMD__'
 sed -n '220,265p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [44]
+run 44 <<'__STEP_CMD__'
 ls /testbed/test/testhelpers/testdefs/package/ | grep -i parameter
+__STEP_CMD__
 
-# [45]
+run 45 <<'__STEP_CMD__'
 find /testbed/test/testhelpers/testdefs/package -name "*Parameters*" -o -name "*parameters*" | head -5
+__STEP_CMD__
 
-# [46]
+run 46 <<'__STEP_CMD__'
 sed -n '40,75p' /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [47]
+run 47 <<'__STEP_CMD__'
 sed -n '275,300p' /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [48]
+run 48 <<'__STEP_CMD__'
 sed -n '253,270p' /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [49]
+run 49 <<'__STEP_CMD__'
 sed -n '235,252p' /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [50]
+run 50 <<'__STEP_CMD__'
 sed -n '215,235p' /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [51]
+run 51 <<'__STEP_CMD__'
 grep -n "fishForFHIR" /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [52]
+run 52 <<'__STEP_CMD__'
 sed -n '197,213p' /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [53]
+run 53 <<'__STEP_CMD__'
 grep -rn "parameter" /testbed/src --include="*.ts" | grep -i "foreach\|\.rules" | head -20
+__STEP_CMD__
 
-# [54]
+run 54 <<'__STEP_CMD__'
 grep -rn "Bundle" /testbed/src/export --include="*.ts" -A3 -B3 | head -50
+__STEP_CMD__
 
-# [55]
+run 55 <<'__STEP_CMD__'
 sed -n '30,50p' /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [56]
+run 56 <<'__STEP_CMD__'
 sed -n '385,430p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [57]
+run 57 <<'__STEP_CMD__'
 grep -rn "\.rules\s*=" /testbed/src --include="*.ts" | grep -v "//.*\.rules" | head -20
+__STEP_CMD__
 
-# [58]
+run 58 <<'__STEP_CMD__'
 grep -rn "fromJSON\|Object.assign" /testbed/src/fshtypes/Instance.ts
+__STEP_CMD__
 
-# [59]
+run 59 <<'__STEP_CMD__'
 grep -rn "cloneDeep.*Instance\|Object.assign.*Instance" /testbed/src --include="*.ts" | head -10
+__STEP_CMD__
 
-# [60]
+run 60 <<'__STEP_CMD__'
 sed -n '405,415p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [61]
+run 61 <<'__STEP_CMD__'
 grep -n "fish.*Type.RuleSet" /testbed/src/import/FSHTank.ts -A10 | head -30
+__STEP_CMD__
 
-# [62]
+run 62 <<'__STEP_CMD__'
 grep -n "fish(" /testbed/src/import/FSHTank.ts | head -10
+__STEP_CMD__
 
-# [63]
+run 63 <<'__STEP_CMD__'
 sed -n '105,160p' /testbed/src/import/FSHTank.ts
+__STEP_CMD__
 
-# [64]
+run 64 <<'__STEP_CMD__'
 grep -rn "\.forEach" /testbed/src/fhirtypes/common.ts | grep -v "?\.forEach" | grep -v "Map\|Set"
+__STEP_CMD__
 
-# [65]
+run 65 <<'__STEP_CMD__'
 grep -rn "Cannot read property" /testbed/test --include="*.test.ts" | head -5
+__STEP_CMD__
 
-# [66]
+run 66 <<'__STEP_CMD__'
 cd /testbed && git log --oneline --all | head -20
+__STEP_CMD__
 
-# [67]
+run 67 <<'__STEP_CMD__'
 cd /testbed && git log --all --grep="Parameters" --oneline | head -10
+__STEP_CMD__
 
-# [68]
+run 68 <<'__STEP_CMD__'
 sed -n '385,445p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [69]
+run 69 <<'__STEP_CMD__'
 sed -n '335,380p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [70]
+run 70 <<'__STEP_CMD__'
 sed -n '275,285p' /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [71]
+run 71 <<'__STEP_CMD__'
 sed -n '28,35p' /testbed/src/export/InstanceExporter.ts
+__STEP_CMD__
 
-# [72]
+run 72 <<'__STEP_CMD__'
 cat > /tmp/fix.patch << 'EOF'
 --- a/src/fhirtypes/common.ts
 +++ b/src/fhirtypes/common.ts
@@ -405,71 +489,93 @@ cat > /tmp/fix.patch << 'EOF'
        expandedRules.push(rule);
        return;
 EOF
+__STEP_CMD__
 
-# [73]
+run 73 <<'__STEP_CMD__'
 sed -n '354p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [74]
+run 74 <<'__STEP_CMD__'
 sed -n '397,410p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [75]
+run 75 <<'__STEP_CMD__'
 sed -n '354,360p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [76]
+run 76 <<'__STEP_CMD__'
 grep -rn "parameter" /testbed/src/fhirtypes/StructureDefinition.ts | head -20
+__STEP_CMD__
 
-# [77]
+run 77 <<'__STEP_CMD__'
 sed -i '356s/ruleSet\.rules\.forEach/(ruleSet.rules ?? []).forEach/' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [78]
+run 78 <<'__STEP_CMD__'
 sed -i '391s/fshDefinition\.rules\.forEach/(fshDefinition.rules ?? []).forEach/' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [79]
+run 79 <<'__STEP_CMD__'
 sed -i '408s/ruleSet\.rules\.forEach/(ruleSet.rules ?? []).forEach/' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [80]
+run 80 <<'__STEP_CMD__'
 sed -n '354,360p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [81]
+run 81 <<'__STEP_CMD__'
 grep -n "ruleSet.rules.forEach" /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [82]
+run 82 <<'__STEP_CMD__'
 grep -n "fshDefinition.rules.forEach" /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [83]
+run 83 <<'__STEP_CMD__'
 sed -n '391p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [84]
+run 84 <<'__STEP_CMD__'
 sed -n '408p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [85]
+run 85 <<'__STEP_CMD__'
 sed -i '357s/ruleSet\.rules\.forEach/(ruleSet.rules ?? []).forEach/' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [86]
+run 86 <<'__STEP_CMD__'
 sed -n '357p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [87]
+run 87 <<'__STEP_CMD__'
 sed -n '377p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [88]
+run 88 <<'__STEP_CMD__'
 sed -i '377s/\.\.\.fshDefinition\.rules/...fshDefinition.rules ?? []/' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [89]
+run 89 <<'__STEP_CMD__'
 sed -n '377p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [90]
+run 90 <<'__STEP_CMD__'
 sed -i '377s/\.\.\.fshDefinition\.rules ?? \[\]/...(fshDefinition.rules ?? [])/' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [91]
+run 91 <<'__STEP_CMD__'
 sed -n '377p' /testbed/src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [92]
+run 92 <<'__STEP_CMD__'
 cd /testbed && npm run build 2>&1 | grep -E "error|Error" | head -20
+__STEP_CMD__
 
-# [93]
+run 93 <<'__STEP_CMD__'
 cd /testbed && npm test 2>&1 | tail -50
+__STEP_CMD__
 
-# [94]
+run 94 <<'__STEP_CMD__'
 cat > /testbed/test_parameters_fix.js << 'EOF'
 const { FHIRDefinitions, loadFromPath } = require('./dist/fhirdefs');
 const { FSHTank, FSHDocument } = require('./dist/import');
@@ -560,38 +666,49 @@ function run() {
 const success = run();
 process.exit(success ? 0 : 1);
 EOF
+__STEP_CMD__
 
-# [95]
+run 95 <<'__STEP_CMD__'
 cd /testbed && node test_parameters_fix.js 2>&1 | grep -v "Warning:"
+__STEP_CMD__
 
-# [96]
+run 96 <<'__STEP_CMD__'
 grep -rn "Parameters" /testbed/test/export/InstanceExporter.test.ts | head -10
+__STEP_CMD__
 
-# [97]
+run 97 <<'__STEP_CMD__'
 cd /testbed && git diff src/fhirtypes/common.ts
+__STEP_CMD__
 
-# [98]
+run 98 <<'__STEP_CMD__'
 grep -rn "new Instance\|new RuleSet" /testbed/src --include="*.ts" | grep -v "test" | head -20
+__STEP_CMD__
 
-# [99]
+run 99 <<'__STEP_CMD__'
 grep -rn "new Instance" /testbed/src --include="*.ts" | head -20
+__STEP_CMD__
 
-# [100]
+run 100 <<'__STEP_CMD__'
 grep -rn "new RuleSet" /testbed/src --include="*.ts" | head -20
+__STEP_CMD__
 
-# [101]
+run 101 <<'__STEP_CMD__'
 cd /testbed && npm test -- --testPathPattern="InstanceExporter" 2>&1 | tail -30
+__STEP_CMD__
 
-# [102]
+run 102 <<'__STEP_CMD__'
 cd /testbed && npm test -- --testPathPattern="common" 2>&1 | tail -20
+__STEP_CMD__
 
-# [103]
+run 103 <<'__STEP_CMD__'
 grep -rn "applyInsertRules\|applyMixinRules" /testbed/test --include="*.test.ts" | head -10
+__STEP_CMD__
 
-# [104]
+run 104 <<'__STEP_CMD__'
 cd /testbed && npm test -- --testPathPattern="applyInsertRules" 2>&1 | tail -30
+__STEP_CMD__
 
-# [105]
+run 105 <<'__STEP_CMD__'
 cat > /testbed/verify_fix.js << 'EOF'
 // This script verifies that the fix prevents the "Cannot read property 'forEach' of undefined" error
 // when processing Parameters instances with valueReference to inline instances
@@ -668,15 +785,20 @@ try {
 console.log('All tests passed! ✓');
 process.exit(0);
 EOF
+__STEP_CMD__
 
-# [106]
+run 106 <<'__STEP_CMD__'
 cd /testbed && node verify_fix.js 2>&1 | grep -v "Warning:"
+__STEP_CMD__
 
-# [107]
+run 107 <<'__STEP_CMD__'
 cd /testbed && git diff src/
+__STEP_CMD__
 
-# [108]
+run 108 <<'__STEP_CMD__'
 cd /testbed && git diff src/fhirtypes/common.ts > patch.txt
+__STEP_CMD__
 
-# [109]
+run 109 <<'__STEP_CMD__'
 cat patch.txt
+__STEP_CMD__

@@ -1,22 +1,40 @@
 #!/usr/bin/env bash
 # alangpierce__sucrase-800，共 132 条命令，按轨迹原顺序执行
+# 控制台只打印每条命令的退出码和耗时；命令输出写到 /tmp/traj-run_sucrase_800/step-<序号>.log
+LOG_DIR="${LOG_DIR:-/tmp/traj-run_sucrase_800}"
+mkdir -p "$LOG_DIR"
 
-# [1]
+run() {
+  local n=$1 cmd start end rc
+  cmd=$(cat)
+  start=$(date +%s%3N)
+  ( eval "$cmd" ) >"$LOG_DIR/step-$n.log" 2>&1
+  rc=$?
+  end=$(date +%s%3N)
+  printf '[%s] rc=%s %sms\n' "$n" "$rc" "$((end - start))"
+}
+
+run 1 <<'__STEP_CMD__'
 ln -sfn /sucrase /testbed && ls /testbed | head -3; go clean -cache 2>/dev/null; rm -rf /testbed/target /testbed/dist /testbed/build /testbed/out /testbed/.gradle /testbed/node_modules/.cache 2>/dev/null; find /testbed -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null; find /testbed -name '*.tsbuildinfo' -delete 2>/dev/null; find /testbed -name '*.o' -delete 2>/dev/null; true; rm -rf /tmp/jest_* /testbed/node_modules/.vite /testbed/.parcel-cache /testbed/.eslintcache 2>/dev/null; true
+__STEP_CMD__
 
-# [2]
+run 2 <<'__STEP_CMD__'
 ls -la
+__STEP_CMD__
 
-# [3]
+run 3 <<'__STEP_CMD__'
 find src -type f -name "*.ts" -o -name "*.js" | head -20
+__STEP_CMD__
 
-# [4]
+run 4 <<'__STEP_CMD__'
 ls -la src/
+__STEP_CMD__
 
-# [5]
+run 5 <<'__STEP_CMD__'
 ls -la src/transformers/
+__STEP_CMD__
 
-# [6]
+run 6 <<'__STEP_CMD__'
 cat > reproduce_issue.js << 'EOF'
 const sucrase = require("./dist/index");
 
@@ -46,41 +64,53 @@ console.log("\n=== Flow Output ===");
 const flowResult = sucrase.transform(flowCode, { transforms: ["flow"] });
 console.log(flowResult.code);
 EOF
+__STEP_CMD__
 
-# [7]
+run 7 <<'__STEP_CMD__'
 node reproduce_issue.js
+__STEP_CMD__
 
-# [8]
+run 8 <<'__STEP_CMD__'
 cat src/transformers/TypeScriptTransformer.ts
+__STEP_CMD__
 
-# [9]
+run 9 <<'__STEP_CMD__'
 cat src/transformers/FlowTransformer.ts
+__STEP_CMD__
 
-# [10]
+run 10 <<'__STEP_CMD__'
 cat src/transformers/RootTransformer.ts | head -200
+__STEP_CMD__
 
-# [11]
+run 11 <<'__STEP_CMD__'
 grep -n "processPossibleTypeRange" src/transformers/RootTransformer.ts
+__STEP_CMD__
 
-# [12]
+run 12 <<'__STEP_CMD__'
 sed -n '435,500p' src/transformers/RootTransformer.ts
+__STEP_CMD__
 
-# [13]
+run 13 <<'__STEP_CMD__'
 grep -n "processClass" src/transformers/RootTransformer.ts | head -20
+__STEP_CMD__
 
-# [14]
+run 14 <<'__STEP_CMD__'
 sed -n '221,350p' src/transformers/RootTransformer.ts
+__STEP_CMD__
 
-# [15]
+run 15 <<'__STEP_CMD__'
 cat src/util/getClassInfo.ts | head -100
+__STEP_CMD__
 
-# [16]
+run 16 <<'__STEP_CMD__'
 grep -n "processConstructor" src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [17]
+run 17 <<'__STEP_CMD__'
 sed -n '246,350p' src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [18]
+run 18 <<'__STEP_CMD__'
 cat > test_tokens.js << 'EOF'
 const {parse} = require("./dist/parser/index");
 
@@ -105,11 +135,13 @@ result.tokens.forEach((token, i) => {
   console.log(`${i}: ${token.type} "${token.value}" isType=${token.isType}`);
 });
 EOF
+__STEP_CMD__
 
-# [19]
+run 19 <<'__STEP_CMD__'
 node test_tokens.js 2>&1 | head -50
+__STEP_CMD__
 
-# [20]
+run 20 <<'__STEP_CMD__'
 cat > test_tokens2.js << 'EOF'
 const sucrase = require("./dist/index");
 
@@ -142,122 +174,161 @@ try {
   console.error("Error:", e.message);
 }
 EOF
+__STEP_CMD__
 
-# [21]
+run 21 <<'__STEP_CMD__'
 node test_tokens2.js 2>&1
+__STEP_CMD__
 
-# [22]
+run 22 <<'__STEP_CMD__'
 ls -la src/parser/
+__STEP_CMD__
 
-# [23]
+run 23 <<'__STEP_CMD__'
 find test -name "*.js" -o -name "*.ts" | grep -i constructor | head -5
+__STEP_CMD__
 
-# [24]
+run 24 <<'__STEP_CMD__'
 find test -type f | head -20
+__STEP_CMD__
 
-# [25]
+run 25 <<'__STEP_CMD__'
 grep -n "constructor" test/typescript-test.ts | head -20
+__STEP_CMD__
 
-# [26]
+run 26 <<'__STEP_CMD__'
 grep -n "constructor.*:" test/typescript-test.ts | head -20
+__STEP_CMD__
 
-# [27]
+run 27 <<'__STEP_CMD__'
 sed -n '193,220p' src/transformers/RootTransformer.ts
+__STEP_CMD__
 
-# [28]
+run 28 <<'__STEP_CMD__'
 find src/parser -name "*.ts" -exec grep -l "returnType" {} \;
+__STEP_CMD__
 
-# [29]
+run 29 <<'__STEP_CMD__'
 find src/parser -name "*.ts" | head -20
+__STEP_CMD__
 
-# [30]
+run 30 <<'__STEP_CMD__'
 grep -n "constructor" src/parser/plugins/typescript.ts | head -20
+__STEP_CMD__
 
-# [31]
+run 31 <<'__STEP_CMD__'
 sed -n '315,340p' src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [32]
+run 32 <<'__STEP_CMD__'
 grep -n "colon" src/parser/plugins/typescript.ts | head -20
+__STEP_CMD__
 
-# [33]
+run 33 <<'__STEP_CMD__'
 grep -n "tsFillSignature" src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [34]
+run 34 <<'__STEP_CMD__'
 sed -n '243,260p' src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [35]
+run 35 <<'__STEP_CMD__'
 grep -n "tsParseTypeOrTypePredicateAnnotation" src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [36]
+run 36 <<'__STEP_CMD__'
 sed -n '674,700p' src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [37]
+run 37 <<'__STEP_CMD__'
 grep -n "pushTypeContext" src/parser/plugins/types.ts
+__STEP_CMD__
 
-# [38]
+run 38 <<'__STEP_CMD__'
 grep -rn "pushTypeContext" src/parser/
+__STEP_CMD__
 
-# [39]
+run 39 <<'__STEP_CMD__'
 sed -n '192,210p' src/parser/tokenizer/index.ts
+__STEP_CMD__
 
-# [40]
+run 40 <<'__STEP_CMD__'
 grep -n "^function expect" src/parser/traverser/util.ts
+__STEP_CMD__
 
-# [41]
+run 41 <<'__STEP_CMD__'
 grep -n "export function expect" src/parser/traverser/util.ts
+__STEP_CMD__
 
-# [42]
+run 42 <<'__STEP_CMD__'
 sed -n '83,95p' src/parser/traverser/util.ts
+__STEP_CMD__
 
-# [43]
+run 43 <<'__STEP_CMD__'
 grep -n "^export function next" src/parser/tokenizer/index.ts
+__STEP_CMD__
 
-# [44]
+run 44 <<'__STEP_CMD__'
 sed -n '171,190p' src/parser/tokenizer/index.ts
+__STEP_CMD__
 
-# [45]
+run 45 <<'__STEP_CMD__'
 grep -n "class Token" src/parser/tokenizer/index.ts
+__STEP_CMD__
 
-# [46]
+run 46 <<'__STEP_CMD__'
 sed -n '111,165p' src/parser/tokenizer/index.ts
+__STEP_CMD__
 
-# [47]
+run 47 <<'__STEP_CMD__'
 grep -n "parseClassMethod" src/parser/traverser/statement.ts
+__STEP_CMD__
 
-# [48]
+run 48 <<'__STEP_CMD__'
 sed -n '881,950p' src/parser/traverser/statement.ts
+__STEP_CMD__
 
-# [49]
+run 49 <<'__STEP_CMD__'
 grep -n "^function parseMethod" src/parser/traverser/expression.ts
+__STEP_CMD__
 
-# [50]
+run 50 <<'__STEP_CMD__'
 grep -n "export function parseMethod" src/parser/traverser/expression.ts
+__STEP_CMD__
 
-# [51]
+run 51 <<'__STEP_CMD__'
 sed -n '918,970p' src/parser/traverser/expression.ts
+__STEP_CMD__
 
-# [52]
+run 52 <<'__STEP_CMD__'
 grep -n "tsParseFunctionBodyAndFinish" src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [53]
+run 53 <<'__STEP_CMD__'
 sed -n '1202,1230p' src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [54]
+run 54 <<'__STEP_CMD__'
 grep -n "flowParseFunctionBodyAndFinish" src/parser/plugins/flow.ts
+__STEP_CMD__
 
-# [55]
+run 55 <<'__STEP_CMD__'
 sed -n '716,750p' src/parser/plugins/flow.ts
+__STEP_CMD__
 
-# [56]
+run 56 <<'__STEP_CMD__'
 grep -n "flowParseTypeAndPredicateInitialiser" src/parser/plugins/flow.ts
+__STEP_CMD__
 
-# [57]
+run 57 <<'__STEP_CMD__'
 sed -n '73,90p' src/parser/plugins/flow.ts
+__STEP_CMD__
 
-# [58]
+run 58 <<'__STEP_CMD__'
 sed -n '830,850p' src/parser/traverser/statement.ts
+__STEP_CMD__
 
-# [59]
+run 59 <<'__STEP_CMD__'
 cat > debug_tokens.js << 'EOF'
 const {transform} = require("./dist/index");
 
@@ -285,59 +356,77 @@ for (let i = 0; i < constructorLine.length; i++) {
   console.log(`  ${i}: '${constructorLine[i]}' (${constructorLine.charCodeAt(i)})`);
 }
 EOF
+__STEP_CMD__
 
-# [60]
+run 60 <<'__STEP_CMD__'
 node debug_tokens.js
+__STEP_CMD__
 
-# [61]
+run 61 <<'__STEP_CMD__'
 grep -n "isConstructor" src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [62]
+run 62 <<'__STEP_CMD__'
 grep -n "isConstructor" src/parser/plugins/flow.ts
+__STEP_CMD__
 
-# [63]
+run 63 <<'__STEP_CMD__'
 grep -n "export function parseFunctionParams" src/parser/traverser/expression.ts
+__STEP_CMD__
 
-# [64]
+run 64 <<'__STEP_CMD__'
 grep -n "parseFunctionParams" src/parser/traverser/expression.ts | head -5
+__STEP_CMD__
 
-# [65]
+run 65 <<'__STEP_CMD__'
 grep -n "^export function parseFunctionParams" src/parser/traverser/lval.ts
+__STEP_CMD__
 
-# [66]
+run 66 <<'__STEP_CMD__'
 grep -n "function parseFunctionParams" src/parser/traverser/lval.ts
+__STEP_CMD__
 
-# [67]
+run 67 <<'__STEP_CMD__'
 grep -rn "function parseFunctionParams" src/parser/
+__STEP_CMD__
 
-# [68]
+run 68 <<'__STEP_CMD__'
 sed -n '689,750p' src/parser/traverser/statement.ts
+__STEP_CMD__
 
-# [69]
+run 69 <<'__STEP_CMD__'
 grep -B5 -A10 "ContextualKeyword._constructor" src/parser/traverser/statement.ts | head -40
+__STEP_CMD__
 
-# [70]
+run 70 <<'__STEP_CMD__'
 grep -rn "constructor.*:.*{" test/ | grep -E "(typescript|flow)" | head -10
+__STEP_CMD__
 
-# [71]
+run 71 <<'__STEP_CMD__'
 grep -n "tsStartParseFunctionParams" src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [72]
+run 72 <<'__STEP_CMD__'
 sed -n '1521,1540p' src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [73]
+run 73 <<'__STEP_CMD__'
 grep -i "constructor" src/parser/plugins/typescript.ts
+__STEP_CMD__
 
-# [74]
+run 74 <<'__STEP_CMD__'
 sed -n '435,445p' src/transformers/RootTransformer.ts
+__STEP_CMD__
 
-# [75]
+run 75 <<'__STEP_CMD__'
 grep -n "function isClassMethod" src/parser/traverser/statement.ts
+__STEP_CMD__
 
-# [76]
+run 76 <<'__STEP_CMD__'
 sed -n '754,780p' src/parser/traverser/statement.ts
+__STEP_CMD__
 
-# [77]
+run 77 <<'__STEP_CMD__'
 cat > test_method_return.js << 'EOF'
 const sucrase = require("./dist/index");
 
@@ -354,38 +443,49 @@ console.log("\nOutput:");
 const result = sucrase.transform(code, { transforms: ["typescript"] });
 console.log(result.code);
 EOF
+__STEP_CMD__
 
-# [78]
+run 78 <<'__STEP_CMD__'
 node test_method_return.js
+__STEP_CMD__
 
-# [79]
+run 79 <<'__STEP_CMD__'
 grep -rn "constructor" src/transformers/ | grep -v "// " | head -20
+__STEP_CMD__
 
-# [80]
+run 80 <<'__STEP_CMD__'
 sed -n '246,305p' src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [81]
+run 81 <<'__STEP_CMD__'
 sed -n '221,248p' src/transformers/RootTransformer.ts
+__STEP_CMD__
 
-# [82]
+run 82 <<'__STEP_CMD__'
 grep -n "restoreFromSnapshot" src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [83]
+run 83 <<'__STEP_CMD__'
 tail -20 src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [84]
+run 84 <<'__STEP_CMD__'
 sed -n '180,245p' src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [85]
+run 85 <<'__STEP_CMD__'
 grep -n "rangesToRemove.push" src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [86]
+run 86 <<'__STEP_CMD__'
 sed -n '150,165p' src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [87]
+run 87 <<'__STEP_CMD__'
 sed -n '278,285p' src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [88]
+run 88 <<'__STEP_CMD__'
 cat > fix.patch << 'EOF'
 --- a/src/util/getClassInfo.ts
 +++ b/src/util/getClassInfo.ts
@@ -402,20 +502,25 @@ cat > fix.patch << 'EOF'
  
    // Advance through body looking for a super call.
 EOF
+__STEP_CMD__
 
-# [89]
+run 89 <<'__STEP_CMD__'
 patch -p1 < fix.patch
+__STEP_CMD__
 
-# [90]
+run 90 <<'__STEP_CMD__'
 npm run build 2>&1 | tail -20
+__STEP_CMD__
 
-# [91]
+run 91 <<'__STEP_CMD__'
 npx tsc 2>&1 | head -30
+__STEP_CMD__
 
-# [92]
+run 92 <<'__STEP_CMD__'
 node reproduce_issue.js
+__STEP_CMD__
 
-# [93]
+run 93 <<'__STEP_CMD__'
 cat > test_isType.js << 'EOF'
 const {parse} = require("./dist/parser/index");
 
@@ -439,14 +544,17 @@ result.tokens.forEach((token, i) => {
   console.log(`${i}: type=${String(token.type).padEnd(20)} value="${value.padEnd(10)}" isType=${token.isType}`);
 });
 EOF
+__STEP_CMD__
 
-# [94]
+run 94 <<'__STEP_CMD__'
 node test_isType.js 2>&1 | grep -A2 -B2 "constructor"
+__STEP_CMD__
 
-# [95]
+run 95 <<'__STEP_CMD__'
 node test_isType.js 2>&1
+__STEP_CMD__
 
-# [96]
+run 96 <<'__STEP_CMD__'
 cat > test.ts << 'EOF'
 class Foo {
   constructor(): Foo {
@@ -454,11 +562,13 @@ class Foo {
   }
 }
 EOF
+__STEP_CMD__
 
-# [97]
+run 97 <<'__STEP_CMD__'
 npx tsc --noEmit test.ts 2>&1
+__STEP_CMD__
 
-# [98]
+run 98 <<'__STEP_CMD__'
 cat > test_parse2.js << 'EOF'
 const {parse} = require("./dist/parser/index");
 
@@ -489,26 +599,33 @@ try {
   console.log("Failed without TypeScript:", e.message);
 }
 EOF
+__STEP_CMD__
 
-# [99]
+run 99 <<'__STEP_CMD__'
 node test_parse2.js
+__STEP_CMD__
 
-# [100]
+run 100 <<'__STEP_CMD__'
 cat reproduce_issue.js
+__STEP_CMD__
 
-# [101]
+run 101 <<'__STEP_CMD__'
 grep -A30 "export function transform" src/index.ts | head -40
+__STEP_CMD__
 
-# [102]
+run 102 <<'__STEP_CMD__'
 grep -A50 "function getSucraseContext" src/index.ts | head -60
+__STEP_CMD__
 
-# [103]
+run 103 <<'__STEP_CMD__'
 cat src/parser/index.ts
+__STEP_CMD__
 
-# [104]
+run 104 <<'__STEP_CMD__'
 node reproduce_issue.js 2>&1
+__STEP_CMD__
 
-# [105]
+run 105 <<'__STEP_CMD__'
 cat > debug_transform.js << 'EOF'
 const sucrase = require("./dist/index");
 
@@ -536,38 +653,49 @@ const result = sucrase.transform(code, { transforms: ["typescript"] });
 console.log("\nOutput:");
 console.log(result.code);
 EOF
+__STEP_CMD__
 
-# [106]
+run 106 <<'__STEP_CMD__'
 node debug_transform.js
+__STEP_CMD__
 
-# [107]
+run 107 <<'__STEP_CMD__'
 grep -A5 "Skip any return type" dist/util/getClassInfo.js
+__STEP_CMD__
 
-# [108]
+run 108 <<'__STEP_CMD__'
 npx tsc --project tsconfig.json 2>&1 | grep -i error | head -10
+__STEP_CMD__
 
-# [109]
+run 109 <<'__STEP_CMD__'
 grep -A5 "Skip any return type" dist/util/getClassInfo.js
+__STEP_CMD__
 
-# [110]
+run 110 <<'__STEP_CMD__'
 ls -la dist/util/getClassInfo.js
+__STEP_CMD__
 
-# [111]
+run 111 <<'__STEP_CMD__'
 cat tsconfig.json
+__STEP_CMD__
 
-# [112]
+run 112 <<'__STEP_CMD__'
 cat package.json | grep -A10 '"scripts"'
+__STEP_CMD__
 
-# [113]
+run 113 <<'__STEP_CMD__'
 ./node_modules/.bin/sucrase-node script/build.ts --fast 2>&1 | tail -30
+__STEP_CMD__
 
-# [114]
+run 114 <<'__STEP_CMD__'
 grep -A5 "Skip any return type" dist/util/getClassInfo.js
+__STEP_CMD__
 
-# [115]
+run 115 <<'__STEP_CMD__'
 node reproduce_issue.js
+__STEP_CMD__
 
-# [116]
+run 116 <<'__STEP_CMD__'
 cat > test_edge_cases.js << 'EOF'
 const sucrase = require("./dist/index");
 
@@ -635,11 +763,13 @@ for (const testCase of testCases) {
   }
 }
 EOF
+__STEP_CMD__
 
-# [117]
+run 117 <<'__STEP_CMD__'
 node test_edge_cases.js
+__STEP_CMD__
 
-# [118]
+run 118 <<'__STEP_CMD__'
 cat > test_flow.js << 'EOF'
 const sucrase = require("./dist/index");
 
@@ -675,23 +805,29 @@ for (const testCase of testCases) {
   }
 }
 EOF
+__STEP_CMD__
 
-# [119]
+run 119 <<'__STEP_CMD__'
 node test_flow.js
+__STEP_CMD__
 
-# [120]
+run 120 <<'__STEP_CMD__'
 npm test 2>&1 | tail -50
+__STEP_CMD__
 
-# [121]
+run 121 <<'__STEP_CMD__'
 ./node_modules/.bin/mocha --require sucrase-register test/*-test.ts 2>&1 | tail -100
+__STEP_CMD__
 
-# [122]
+run 122 <<'__STEP_CMD__'
 cat .mocharc.js
+__STEP_CMD__
 
-# [123]
+run 123 <<'__STEP_CMD__'
 ./node_modules/.bin/mocha --require ./register/index.js test/*-test.ts 2>&1 | tail -100
+__STEP_CMD__
 
-# [124]
+run 124 <<'__STEP_CMD__'
 cat > test_constructor_return_type.js << 'EOF'
 const sucrase = require("./dist/index");
 
@@ -744,27 +880,36 @@ if (flowResult.code === expectedFlow) {
 
 console.log("\n✓ All tests passed!");
 EOF
+__STEP_CMD__
 
-# [125]
+run 125 <<'__STEP_CMD__'
 node test_constructor_return_type.js
+__STEP_CMD__
 
-# [126]
+run 126 <<'__STEP_CMD__'
 cat src/util/getClassInfo.ts | grep -A10 -B5 "Skip any return type"
+__STEP_CMD__
 
-# [127]
+run 127 <<'__STEP_CMD__'
 grep -n "tokens.nextToken()" src/util/getClassInfo.ts | head -20
+__STEP_CMD__
 
-# [128]
+run 128 <<'__STEP_CMD__'
 grep -n "function process" src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [129]
+run 129 <<'__STEP_CMD__'
 git diff src/util/getClassInfo.ts
+__STEP_CMD__
 
-# [130]
+run 130 <<'__STEP_CMD__'
 git diff src/util/getClassInfo.ts > patch.txt
+__STEP_CMD__
 
-# [131]
+run 131 <<'__STEP_CMD__'
 cat patch.txt
+__STEP_CMD__
 
-# [132]
+run 132 <<'__STEP_CMD__'
 node reproduce_issue.js
+__STEP_CMD__
