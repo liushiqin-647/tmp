@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # fhir__sushi-513，共 109 条命令，按轨迹原顺序执行
-cd /testbed || { echo "缺少 /testbed 目录"; exit 1; }
 
 # [1]
 ln -sfn /sushi /testbed && ls /testbed | head -3; go clean -cache 2>/dev/null; rm -rf /testbed/target /testbed/dist /testbed/build /testbed/out /testbed/.gradle /testbed/node_modules/.cache 2>/dev/null; find /testbed -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null; find /testbed -name '*.tsbuildinfo' -delete 2>/dev/null; find /testbed -name '*.o' -delete 2>/dev/null; true; rm -rf /tmp/jest_* /testbed/node_modules/.vite /testbed/.parcel-cache /testbed/.eslintcache 2>/dev/null; true
